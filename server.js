@@ -2,7 +2,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const app = express();
 const port = process.env.PORT || 3000;
-const routes = require("./api/login.route.js");
+const routes = require("./api/lottery-compare.route.js");
 
 app.use(bodyParser.urlencoded({ extended: false }));
 
