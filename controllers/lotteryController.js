@@ -1,3 +1,5 @@
+const axios = require("axios");
+
 // Function to fetch lottery codes
 const fetchLotteryCodes = async () => {
 	try {
