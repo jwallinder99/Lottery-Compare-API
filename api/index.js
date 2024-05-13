@@ -1,8 +1,3 @@
-const express = require("express");
-const app = express();
+const server = require("../server.js");
 
-app.get("*", (req, res) => {
-	res.send("Welcome to Lottery-Compare API");
-});
-
-module.exports = app;
+export default server;
