@@ -4,7 +4,7 @@ const router = Router();
 
 const jsonParser = bodyParser.json();
 
-router.post("/", jsonParser, (req, res) => {
+router.post("/lottery-compare", jsonParser, (req, res) => {
 	res.send(`Welcome, ${req.body.username}`);
 });
 
