@@ -72,36 +72,37 @@ router.post("/lottery-compare", jsonParser, async (req, res) => {
 
 		const drawCodes = drawCodesNested.flat();
 
-		return res.json(drawCodes);
+		// return res.json(drawCodes);
 
-		// const detailedDrawDataPromises = drawCodes.map((drawCode) =>
-		// 	axios
-		// 		.get(
-		// 			`https://www.lottosonline.com/api/lotterydata/get_data?action=get_lottery_draw_data&lottery_draw=${drawCode}`
-		// 		)
-		// 		.then((response) => transformResponse(response.data, drawCode))
-		// 		.catch((error) => {
-		// 			console.error(
-		// 				`Failed to fetch detailed draw data for draw code ${drawCode}: ${error.message}`
-		// 			);
-		// 			return null;
-		// 		})
-		// );
+		const detailedDrawDataPromises = drawCodes.map((drawCode) =>
+			axios
+				.get(
+					`https://www.lottosonline.com/api/lotterydata/get_data?action=get_lottery_draw_data&lottery_draw=${drawCode}`
+				)
+				.then((response) => transformResponse(response.data, drawCode))
+				.catch((error) => {
+					console.error(
+						`Failed to fetch detailed draw data for draw code ${drawCode}: ${error.message}`
+					);
+					return null;
+				})
+		);
 
-		// const detailedDrawDataResults = await Promise.all(detailedDrawDataPromises);
-		// const filteredDrawData = detailedDrawDataResults.filter(
-		// 	(data) => Object.keys(data).length !== 0
-		// ); // Filter out empty objects
+		const detailedDrawDataResults = await Promise.all(detailedDrawDataPromises);
+		const filteredDrawData = detailedDrawDataResults.filter(
+			(data) => Object.keys(data).length !== 0
+		); // Filter out empty objects
 
-		// // Calculate winnings based on user numbers
+		return res.json(filteredDrawData);
+
+		// Calculate winnings based on user numbers
 		// const winnings = calculateWinnings(
 		// 	filteredDrawData.flat(),
 		// 	user_numbers,
 		// 	secondary_numbers
 		// );
-		// // console.log("Winnings");
-		// // console.log(winnings);
-		// res.json(winnings);
+
+		res.json(winnings);
 	} catch (error) {
 		console.error(`Error fetching lottery comparisons: ${error.message}`);
 		res.status(500).send("Internal server error");
