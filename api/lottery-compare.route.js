@@ -93,7 +93,7 @@ router.post("/lottery-compare", jsonParser, async (req, res) => {
 			(data) => Object.keys(data).length !== 0
 		); // Filter out empty objects
 
-		return res.json(filteredDrawData);
+		return res.json(filteredDrawData.flat());
 
 		// Calculate winnings based on user numbers
 		// const winnings = calculateWinnings(

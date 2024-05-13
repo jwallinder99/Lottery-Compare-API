@@ -20,6 +20,29 @@ const fetchLotteryCodes = async () => {
 	}
 };
 
+function transformResponse(data, drawCode) {
+	const combinedDrawDetails = {};
+
+	Object.entries(data).forEach(([key, value]) => {
+		if (key === "0" || key.match(/^\d+-\d+-\d+-\d+$/)) {
+			if (!combinedDrawDetails[drawCode]) {
+				combinedDrawDetails[drawCode] = {
+					...value,
+					winnings_structure: { main_draw: [] },
+				};
+			}
+			if (value.winnings_structure && value.winnings_structure.main_draw) {
+				combinedDrawDetails[drawCode].winnings_structure.main_draw.push(
+					...value.winnings_structure.main_draw
+				);
+			}
+		}
+	});
+
+	return combinedDrawDetails;
+}
+
 module.exports = {
 	fetchLotteryCodes,
+	transformResponse,
 };
