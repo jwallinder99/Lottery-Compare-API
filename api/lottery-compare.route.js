@@ -7,6 +7,7 @@ const jsonParser = bodyParser.json();
 const {
 	fetchLotteryCodes,
 	transformResponse,
+	calculateWinnings,
 } = require("../controllers/lotteryController");
 
 router.post("/lottery-compare", jsonParser, async (req, res) => {
