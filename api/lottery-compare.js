@@ -3,7 +3,7 @@ const router = express.Router();
 const bodyParser = require("body-parser");
 const jsonParser = bodyParser.json();
 
-router.post("/lottery-compare", jsonParser, (req, res) => {
+router.post("/", jsonParser, (req, res) => {
 	const { user_numbers } = req.body;
 	return res.send(`User Numbers: ${user_numbers}`);
 });
