@@ -30,9 +30,10 @@ router.post("/lottery-compare", jsonParser, (req, res) => {
 	}
 	// Ensure secondary number is an array with 1 number
 	if (
-		!Array.isArray(secondary_numbers) &&
-		secondary_numbers.length > 1 &&
-		secondary_numbers.length < 3
+		(!Array.isArray(secondary_numbers) &&
+			new Set(secondary_numbers).size < 1) ||
+		new Set(secondary_numbers).size > 2 ||
+		new Set(secondary_numbers).size !== secondary_numbers.length
 	) {
 		return res
 			.status(400)
