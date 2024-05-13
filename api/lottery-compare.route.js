@@ -8,7 +8,7 @@ router.post("/lottery-compare", jsonParser, (req, res) => {
 	const { start_date, end_date, user_numbers, secondary_numbers } = req.body;
 
 	// Check for required fields
-	if (!start_date || !end_date || !user_numbers) {
+	if (!start_date || !end_date || !user_numbers || !secondary_numbers) {
 		console.error(
 			"Missing required fields: start date, end date, or user numbers"
 		);
