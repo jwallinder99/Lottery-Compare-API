@@ -45,12 +45,12 @@ router.post("/lottery-compare", jsonParser, async (req, res) => {
 			.send("Your secondary number must be an array with at least 1 number");
 	}
 
-	const responseBody = {
-		start_date: start_date,
-		end_date: end_date,
-		user_numbers: user_numbers,
-		secondary_numbers: secondary_numbers,
-	};
+	// const responseBody = {
+	// 	start_date: start_date,
+	// 	end_date: end_date,
+	// 	user_numbers: user_numbers,
+	// 	secondary_numbers: secondary_numbers,
+	// };
 
 	// return res.json(responseBody);
 
@@ -96,14 +96,12 @@ router.post("/lottery-compare", jsonParser, async (req, res) => {
 			(data) => Object.keys(data).length !== 0
 		); // Filter out empty objects
 
-		return res.json(filteredDrawData.flat());
-
 		// Calculate winnings based on user numbers
-		// const winnings = calculateWinnings(
-		// 	filteredDrawData.flat(),
-		// 	user_numbers,
-		// 	secondary_numbers
-		// );
+		const winnings = calculateWinnings(
+			filteredDrawData.flat(),
+			user_numbers,
+			secondary_numbers
+		);
 
 		res.json(winnings);
 	} catch (error) {
