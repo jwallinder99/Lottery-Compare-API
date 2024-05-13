@@ -29,7 +29,11 @@ router.post("/lottery-compare", jsonParser, (req, res) => {
 			.send("User numbers must be an array of 5 to 7 unique numbers");
 	}
 	// Ensure secondary number is an array with 1 number
-	if (!Array.isArray(secondary_numbers) && secondary_numbers.length > 1) {
+	if (
+		!Array.isArray(secondary_numbers) &&
+		secondary_numbers.length > 1 &&
+		secondary_numbers.length < 3
+	) {
 		return res
 			.status(400)
 			.send("You scondary number must be an array with 1 number");
