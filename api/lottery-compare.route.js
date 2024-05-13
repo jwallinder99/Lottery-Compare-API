@@ -1,7 +1,6 @@
 const { Router } = require("express");
 const bodyParser = require("body-parser");
 const router = Router();
-const axios = require("axios");
 
 const jsonParser = bodyParser.json();
 
@@ -54,25 +53,26 @@ router.post("/lottery-compare", jsonParser, async (req, res) => {
 
 	try {
 		const lotteryCodes = await fetchLotteryCodes();
-		return res.json(lotteryCodes);
 
-		// const drawCodesNested = await Promise.all(
-		// 	lotteryCodes.map((code) =>
-		// 		axios
-		// 			.get(
-		// 				`https://www.lottosonline.com/api/lotterydata/get_data?action=get_lottery_draws_list&lottery=${code}&start_date=${start_date}&end_date=${end_date}&offset=0&limit=10`
-		// 			)
-		// 			.then((response) => response.data.map((draw) => draw.draw_code))
-		// 			.catch((error) => {
-		// 				console.error(
-		// 					`Failed to fetch draw codes for lottery code ${code}: ${error.message}`
-		// 				);
-		// 				return [];
-		// 			})
-		// 	)
-		// );
+		const drawCodesNested = await Promise.all(
+			lotteryCodes.map((code) =>
+				axios
+					.get(
+						`https://www.lottosonline.com/api/lotterydata/get_data?action=get_lottery_draws_list&lottery=${code}&start_date=${start_date}&end_date=${end_date}&offset=0&limit=10`
+					)
+					.then((response) => response.data.map((draw) => draw.draw_code))
+					.catch((error) => {
+						console.error(
+							`Failed to fetch draw codes for lottery code ${code}: ${error.message}`
+						);
+						return [];
+					})
+			)
+		);
 
-		// const drawCodes = drawCodesNested.flat();
+		const drawCodes = drawCodesNested.flat();
+
+		return res.json(drawCodes);
 
 		// const detailedDrawDataPromises = drawCodes.map((drawCode) =>
 		// 	axios
