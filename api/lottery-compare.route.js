@@ -4,7 +4,10 @@ const router = Router();
 const axios = require("axios");
 const jsonParser = bodyParser.json();
 
-const { fetchLotteryCodes } = require("../controllers/lotteryController");
+const {
+	fetchLotteryCodes,
+	transformResponse,
+} = require("../controllers/lotteryController");
 
 router.post("/lottery-compare", jsonParser, async (req, res) => {
 	const { start_date, end_date, user_numbers, secondary_numbers } = req.body;
