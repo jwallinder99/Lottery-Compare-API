@@ -58,6 +58,8 @@ router.post("/lottery-compare", jsonParser, async (req, res) => {
 
 	async function fetchDrawCodesInBatches(lotteryCodes, batchSize = 20) {
 		const drawCodes = []
+
+		console.log("Start date ", start_date, "End date ", end_date, "===============")
 		for (let i = 0; i < lotteryCodes.length; i += batchSize) {
 			const batch = lotteryCodes.slice(i, i + batchSize);
 			const batchPromises = batch.map((code) => 
@@ -76,7 +78,15 @@ router.post("/lottery-compare", jsonParser, async (req, res) => {
 			const batchResults = await Promise.all(batchPromises);
 			drawCodes.push(...batchResults)
 		}
+		// fs.writeFile('./drawCodes.json', JSON.stringify(drawCodes), (err) => {
+		// 	if (err) {
+		// 		console.log(err)
+		// 	} else {
+		// 		console.log("Data savedf to data.json")
+		// 	}
+		// })
 		return drawCodes
+	
 	}
 	
 	try {
@@ -119,13 +129,13 @@ router.post("/lottery-compare", jsonParser, async (req, res) => {
 
 		const detailedDrawDataResults = await Promise.all(detailedDrawDataPromises);
 		console.log("Detailed Draw Data Results", detailedDrawDataResults)
-		fs.writeFile('./data.json', JSON.stringify(detailedDrawDataResults), (err) => {
-			if (err) {
-				console.log(err)
-			} else {
-				console.log("Data savedf to data.json")
-			}
-		})
+		// fs.writeFile('./DetailedDrawDataResults.json', JSON.stringify(detailedDrawDataResults), (err) => {
+		// 	if (err) {
+		// 		console.log(err)
+		// 	} else {
+		// 		console.log("Data savedf to data.json")
+		// 	}
+		// })
 
 		const filteredDrawData = detailedDrawDataResults.filter(
 			(data) => Object.keys(data).length !== 0
