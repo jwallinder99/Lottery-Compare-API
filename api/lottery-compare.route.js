@@ -3,6 +3,7 @@ const bodyParser = require("body-parser");
 const router = Router();
 const axios = require("axios");
 const jsonParser = bodyParser.json();
+const fs = require('fs')
 
 const {
 	fetchLotteryCodes,
@@ -55,24 +56,48 @@ router.post("/lottery-compare", jsonParser, async (req, res) => {
 
 	// return res.json(responseBody);
 
+	async function fetchDrawCodesInBatches(lotteryCodes, batchSize = 20) {
+		const drawCodes = []
+		for (let i = 0; i < lotteryCodes.length; i += batchSize) {
+			const batch = lotteryCodes.slice(i, i + batchSize);
+			const batchPromises = batch.map((code) => 
+				axios
+				.get(
+					`https://www.lottosonline.com/api/lotterydata/get_data?action=get_lottery_draws_list&lottery=${code}&start_date=${start_date}&end_date=${end_date}&limit=20`
+				)
+				.then((response) => response.data.map((draw) => draw.draw_code))
+				.catch((error) => {
+					console.error(
+						`Failed to fetch draw codes for lottery code ${code}: ${error.message}`
+					);
+					return [];
+				})
+			)
+			const batchResults = await Promise.all(batchPromises);
+			drawCodes.push(...batchResults)
+		}
+		return drawCodes
+	}
+	
 	try {
 		const lotteryCodes = await fetchLotteryCodes();
-
-		const drawCodesNested = await Promise.all(
-			lotteryCodes.map((code) =>
-				axios
-					.get(
-						`https://www.lottosonline.com/api/lotterydata/get_data?action=get_lottery_draws_list&lottery=${code}&start_date=${start_date}&end_date=${end_date}&offset=0&limit=10`
-					)
-					.then((response) => response.data.map((draw) => draw.draw_code))
-					.catch((error) => {
-						console.error(
-							`Failed to fetch draw codes for lottery code ${code}: ${error.message}`
-						);
-						return [];
-					})
-			)
-		);
+		const drawCodesNested = await fetchDrawCodesInBatches(lotteryCodes)
+		
+		// const drawCodesNested = await Promise.all(
+		// 	lotteryCodes.map((code) =>
+		// 		axios
+		// 			.get(
+		// 				`https://www.lottosonline.com/api/lotterydata/get_data?action=get_lottery_draws_list&lottery=${code}&start_date=${start_date}&end_date=${end_date}&limit=20`
+		// 			)
+		// 			.then((response) => response.data.map((draw) => draw.draw_code))
+		// 			.catch((error) => {
+		// 				console.error(
+		// 					`Failed to fetch draw codes for lottery code ${code}: ${error.message}`
+		// 				);
+		// 				return [];
+		// 			})
+		// 	)
+		// );
 
 		const drawCodes = drawCodesNested.flat();
 
@@ -93,9 +118,20 @@ router.post("/lottery-compare", jsonParser, async (req, res) => {
 		);
 
 		const detailedDrawDataResults = await Promise.all(detailedDrawDataPromises);
+		console.log("Detailed Draw Data Results", detailedDrawDataResults)
+		fs.writeFile('./data.json', JSON.stringify(detailedDrawDataResults), (err) => {
+			if (err) {
+				console.log(err)
+			} else {
+				console.log("Data savedf to data.json")
+			}
+		})
+
 		const filteredDrawData = detailedDrawDataResults.filter(
 			(data) => Object.keys(data).length !== 0
 		); // Filter out empty objects
+
+		console.log("Filtered Draw Data =============================================" ,filteredDrawData)
 
 		// Calculate winnings based on user numbers
 		const winnings = calculateWinnings(
@@ -105,6 +141,7 @@ router.post("/lottery-compare", jsonParser, async (req, res) => {
 		);
 
 		res.json(winnings);
+		
 	} catch (error) {
 		console.error(`Error fetching lottery comparisons: ${error.message}`);
 		res.status(500).send("Internal server error");
