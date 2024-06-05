@@ -3,7 +3,7 @@ const bodyParser = require("body-parser");
 const router = Router();
 const axios = require("axios");
 const jsonParser = bodyParser.json();
-const fs = require('fs')
+
 
 const {
 	fetchLotteryCodes,
@@ -47,95 +47,79 @@ router.post("/lottery-compare", jsonParser, async (req, res) => {
 			.send("Your secondary number must be an array with at least 1 number");
 	}
 
-	// const responseBody = {
-	// 	start_date: start_date,
-	// 	end_date: end_date,
-	// 	user_numbers: user_numbers,
-	// 	secondary_numbers: secondary_numbers,
-	// };
 
 	// return res.json(responseBody);
-
-	async function fetchDrawCodesInBatches(lotteryCodes, batchSize = 20) {
-		const drawCodes = []
-
-		console.log("Start date ", start_date, "End date ", end_date, "===============")
-		for (let i = 0; i < lotteryCodes.length; i += batchSize) {
-			const batch = lotteryCodes.slice(i, i + batchSize);
-			const batchPromises = batch.map((code) => 
-				axios
-				.get(
-					`https://www.lottosonline.com/api/lotterydata/get_data?action=get_lottery_draws_list&lottery=${code}&start_date=${start_date}&end_date=${end_date}&limit=20`
-				)
-				.then((response) => response.data.map((draw) => draw.draw_code))
-				.catch((error) => {
-					console.error(
-						`Failed to fetch draw codes for lottery code ${code}: ${error.message}`
-					);
-					return [];
-				})
-			)
-			const batchResults = await Promise.all(batchPromises);
-			drawCodes.push(...batchResults)
-		}
-		// fs.writeFile('./drawCodes.json', JSON.stringify(drawCodes), (err) => {
-		// 	if (err) {
-		// 		console.log(err)
-		// 	} else {
-		// 		console.log("Data savedf to data.json")
-		// 	}
-		// })
-		return drawCodes
-	
-	}
 	
 	try {
 		const lotteryCodes = await fetchLotteryCodes();
-		const drawCodesNested = await fetchDrawCodesInBatches(lotteryCodes)
+
+		if (lotteryCodes) {
+			console.log("Got lottery Codes")
+		}
+
 		
-		// const drawCodesNested = await Promise.all(
-		// 	lotteryCodes.map((code) =>
-		// 		axios
-		// 			.get(
-		// 				`https://www.lottosonline.com/api/lotterydata/get_data?action=get_lottery_draws_list&lottery=${code}&start_date=${start_date}&end_date=${end_date}&limit=20`
-		// 			)
-		// 			.then((response) => response.data.map((draw) => draw.draw_code))
-		// 			.catch((error) => {
-		// 				console.error(
-		// 					`Failed to fetch draw codes for lottery code ${code}: ${error.message}`
-		// 				);
-		// 				return [];
-		// 			})
-		// 	)
-		// );
+		const drawCodesNested = await Promise.all(
+			lotteryCodes.map((code) =>
+				axios
+					.get(
+						`https://www.lottosonline.com/api/lotterydata/get_data?action=get_lottery_draws_list&lottery=${code}&start_date=${start_date}&end_date=${end_date}`
+					)
+					.then((response) => response.data.map((draw) => draw.draw_code))
+					.catch((error) => {
+						console.error(
+							`Failed to fetch draw codes for lottery code ${code}: ${error.message}`
+						);
+						return [];
+					})
+			)
+		);
 
 		const drawCodes = drawCodesNested.flat();
 
+		console.log(`========DRAW CODE LENGTH: ${drawCodes.length}========`)
+
 		// return res.json(drawCodes);
 
-		const detailedDrawDataPromises = drawCodes.map((drawCode) =>
-			axios
-				.get(
-					`https://www.lottosonline.com/api/lotterydata/get_data?action=get_lottery_draw_data&lottery_draw=${drawCode}`
-				)
-				.then((response) => transformResponse(response.data, drawCode))
-				.catch((error) => {
-					console.error(
-						`Failed to fetch detailed draw data for draw code ${drawCode}: ${error.message}`
-					);
-					return null;
-				})
-		);
+	function chunkArray(array, size) {
+		const chunks = [];
+		for (let i = 0; i < array.length; i += size) {
+			chunks.push(array.slice(i, i + size));
+		}
+		return chunks;
+	}
 
-		const detailedDrawDataResults = await Promise.all(detailedDrawDataPromises);
+		async function processBatch(drawCodeBatch){
+			const batchPromises = drawCodeBatch.map((drawCode) =>
+				axios
+					.get(
+						`https://www.lottosonline.com/api/lotterydata/get_data?action=get_lottery_draw_data&lottery_draw=${drawCode}`
+					)
+					.then((response) => transformResponse(response.data, drawCode))
+					.catch((error) => {
+						console.error(
+							`Failed to fetch detailed draw data for draw code ${drawCode}: ${error.message}`
+						);
+						return null;
+					})
+			);
+		// const detailedDrawDataResults = 
+		return await Promise.all(batchPromises);
 		console.log("Detailed Draw Data Results", detailedDrawDataResults)
-		// fs.writeFile('./DetailedDrawDataResults.json', JSON.stringify(detailedDrawDataResults), (err) => {
-		// 	if (err) {
-		// 		console.log(err)
-		// 	} else {
-		// 		console.log("Data savedf to data.json")
-		// 	}
-		// })
+		}
+
+		async function processDrawCodes(drawCodes) {
+			const batchSize = 200;
+			const drawCodeBatches = chunkArray(drawCodes, batchSize)
+			
+			let detailedDrawData = [];
+			for (const batch of drawCodeBatches) {
+				const batchResults = await processBatch(batch)
+				detailedDrawData = detailedDrawData.concat(batchResults)
+			}
+			return detailedDrawData
+		}
+
+		const detailedDrawDataResults = await processDrawCodes(drawCodes)
 
 		const filteredDrawData = detailedDrawDataResults.filter(
 			(data) => Object.keys(data).length !== 0
