@@ -90,7 +90,7 @@ function calculateWinnings(drawDataResults, userNumbers, secondaryNumbers) {
 			const prizeInfo = winningsStructure.find(
 				(prize) =>
 					prize.primary === primaryMatches &&
-					prize.secondary === secondaryMatches
+					(prize.secondary === undefined || prize.secondary === secondaryMatches)
 			);
 
 			const prizeAmount = prizeInfo ? prizeInfo.prize_amount : 0;

@@ -5,6 +5,7 @@ const axios = require("axios");
 const jsonParser = bodyParser.json();
 
 
+
 const {
 	fetchLotteryCodes,
 	transformResponse,
@@ -49,17 +50,15 @@ router.post("/lottery-compare", jsonParser, async (req, res) => {
 
 
 	// return res.json(responseBody);
-	
 	try {
 		const lotteryCodes = await fetchLotteryCodes();
-
+		const filteredCodes = lotteryCodes.filter(code => code.startsWith('UKLOT'))
+		console.log(lotteryCodes)
 		if (lotteryCodes) {
 			console.log("Got lottery Codes")
 		}
-
-		
 		const drawCodesNested = await Promise.all(
-			lotteryCodes.map((code) =>
+			filteredCodes.map((code) =>
 				axios
 					.get(
 						`https://www.lottosonline.com/api/lotterydata/get_data?action=get_lottery_draws_list&lottery=${code}&start_date=${start_date}&end_date=${end_date}`
@@ -76,17 +75,16 @@ router.post("/lottery-compare", jsonParser, async (req, res) => {
 
 		const drawCodes = drawCodesNested.flat();
 
-		console.log(`========DRAW CODE LENGTH: ${drawCodes.length}========`)
-
+		// console.log(`========DRAW CODE LENGTH: ${drawCodes} ========`)
 		// return res.json(drawCodes);
 
-	function chunkArray(array, size) {
+		function chunkArray(array, size) {
 		const chunks = [];
 		for (let i = 0; i < array.length; i += size) {
 			chunks.push(array.slice(i, i + size));
 		}
 		return chunks;
-	}
+		}
 
 		async function processBatch(drawCodeBatch){
 			const batchPromises = drawCodeBatch.map((drawCode) =>
@@ -110,7 +108,7 @@ router.post("/lottery-compare", jsonParser, async (req, res) => {
 		async function processDrawCodes(drawCodes) {
 			const batchSize = 200;
 			const drawCodeBatches = chunkArray(drawCodes, batchSize)
-			
+
 			let detailedDrawData = [];
 			for (const batch of drawCodeBatches) {
 				const batchResults = await processBatch(batch)
@@ -125,7 +123,7 @@ router.post("/lottery-compare", jsonParser, async (req, res) => {
 			(data) => Object.keys(data).length !== 0
 		); // Filter out empty objects
 
-		console.log("Filtered Draw Data =============================================" ,filteredDrawData)
+		// console.log("Filtered Draw Data =============================================" ,filteredDrawData)
 
 		// Calculate winnings based on user numbers
 		const winnings = calculateWinnings(
