@@ -13,7 +13,9 @@ const {
 } = require("../controllers/lotteryController");
 
 router.post("/lottery-compare", jsonParser, async (req, res) => {
-	const { start_date, end_date, user_numbers, secondary_numbers } = req.body;
+	const { start_date, end_date, user_numbers, secondary_numbers, lotto_code } = req.body;
+
+	
 
 	// Check for required fields
 	if (!start_date || !end_date || !user_numbers || !secondary_numbers) {
@@ -52,7 +54,7 @@ router.post("/lottery-compare", jsonParser, async (req, res) => {
 	// return res.json(responseBody);
 	try {
 		const lotteryCodes = await fetchLotteryCodes();
-		const filteredCodes = lotteryCodes.filter(code => code.startsWith('UKLOT'))
+		const filteredCodes = lotteryCodes.filter(code => code.startsWith(lotto_code))
 		console.log(lotteryCodes)
 		if (lotteryCodes) {
 			console.log("Got lottery Codes")
